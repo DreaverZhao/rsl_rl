@@ -20,16 +20,16 @@ from rsl_rl.utils import resolve_callable, resolve_optimizer
 class PPO:
     """Proximal Policy Optimization algorithm (https://arxiv.org/abs/1707.06347)."""
 
-    actor: MLPModel
+    actor: MLPModel | RNNModel
     """The actor model."""
 
-    critic: MLPModel
+    critic: MLPModel | RNNModel
     """The critic model."""
 
     def __init__(
         self,
-        actor: MLPModel,
-        critic: MLPModel,
+        actor: MLPModel | RNNModel,
+        critic: MLPModel | RNNModel,
         storage: RolloutStorage,
         num_learning_epochs: int = 5,
         num_mini_batches: int = 4,

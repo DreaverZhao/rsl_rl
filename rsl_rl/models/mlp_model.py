@@ -12,6 +12,7 @@ from torch.distributions import Normal
 from typing import Any
 
 from rsl_rl.modules import MLP, EmpiricalNormalization, HiddenState
+from rsl_rl.utils import unpad_trajectories
 
 
 class MLPModel(nn.Module):
@@ -121,6 +122,9 @@ class MLPModel(nn.Module):
         latent = torch.cat(obs_list, dim=-1)
         # Normalize observations
         latent = self.obs_normalizer(latent)
+        # If we get masks in mlp mode, unpad the observations
+        if "masks" in kwargs and kwargs["masks"] is not None:
+            latent = unpad_trajectories(latent, kwargs["masks"])
         return latent
 
     def get_hidden_state(self) -> HiddenState:

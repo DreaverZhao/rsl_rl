@@ -14,7 +14,7 @@ from tensordict import TensorDict
 from rsl_rl.algorithms import PPO
 from rsl_rl.env import VecEnv
 from rsl_rl.extensions import resolve_rnd_config, resolve_symmetry_config
-from rsl_rl.models import MLPModel
+from rsl_rl.models import MLPModel, RNNModel
 from rsl_rl.storage import RolloutStorage
 from rsl_rl.utils import resolve_callable, resolve_obs_groups
 from rsl_rl.utils.logger import Logger
@@ -164,11 +164,11 @@ class OnPolicyRunner:
         self.current_learning_iteration = loaded_dict["iter"]
         return loaded_dict["infos"]
 
-    def get_policy(self) -> MLPModel:
+    def get_policy(self) -> MLPModel | RNNModel:
         """Get the policy model."""
         return self.alg.actor
 
-    def get_models(self) -> dict[str, MLPModel]:
+    def get_models(self) -> dict[str, MLPModel | RNNModel]:
         """Return a dict of {name: model} for saving/loading."""
         return {
             "actor": self.alg.actor,
@@ -232,12 +232,13 @@ class OnPolicyRunner:
 
         # Initialize the policy
         actor_class = resolve_callable(self.cfg["actor"].pop("class_name"))
-        actor: MLPModel = actor_class(
+        actor: MLPModel | RNNModel = actor_class(
             obs, self.cfg["obs_groups"], "actor", self.env.num_actions, **self.cfg["actor"]
         ).to(self.device)
         critic_class = resolve_callable(self.cfg["critic"].pop("class_name"))
-        critic: MLPModel = critic_class(obs, self.cfg["obs_groups"], "critic", 1, **self.cfg["critic"]).to(self.device)
-
+        critic: MLPModel | RNNModel = critic_class(
+            obs, self.cfg["obs_groups"], "critic", 1, **self.cfg["critic"]
+        ).to(self.device)
         # Initialize the storage
         storage = RolloutStorage(
             "rl", self.env.num_envs, self.cfg["num_steps_per_env"], obs, [self.env.num_actions], self.device
